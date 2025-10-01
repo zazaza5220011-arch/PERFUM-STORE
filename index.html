@@ -1,0 +1,406 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Perfume Store</title>
+
+  <!-- ========== INLINE STYLES ========== -->
+  <style>
+    :root{
+      --gold:#f0a500;
+      --pink:#ff4f9a;
+      --white:#ffffff;
+      --black:#000000;
+      --muted:#8a8a8a;
+      --card-bg-dark: rgba(255,255,255,0.06);
+      --card-bg-light: rgba(0,0,0,0.04);
+      --radius:16px;
+      --shadow-3d: 0 20px 40px rgba(0,0,0,0.35);
+      --shadow-soft: 0 10px 25px rgba(0,0,0,0.12);
+      --transition: .35s cubic-bezier(.2,.8,.2,1);
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+
+    body{
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--black);
+      color: var(--white);
+      overflow-x: hidden;
+    }
+
+    /* ---------- Landing Selection Screen ---------- */
+    .selection-screen{
+      position: fixed; inset: 0;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      background:#000; color:#fff; z-index:9999; padding:32px; text-align:center;
+    }
+    .brand{
+      font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+      font-size: clamp(24px, 3.5vw, 38px);
+      margin-bottom: 10px;
+    }
+    .tagline{
+      color:#dcdcdc; margin-bottom:28px; font-size:clamp(14px,2vw,16px);
+    }
+    .pick{
+      display:flex; gap:18px; flex-wrap:wrap; justify-content:center;
+    }
+    .pick button{
+      appearance:none; border:none; cursor:pointer;
+      padding:14px 22px; border-radius:999px; font-weight:700;
+      transition: var(--transition); transform: translateY(0);
+    }
+    .pick .men-btn{ background:#111; color:#fff; border:1px solid #2a2a2a; }
+    .pick .men-btn:hover{ transform:translateY(-4px) scale(1.02); box-shadow: var(--shadow-3d); }
+    .pick .women-btn{ background:#fff; color:#000; border:1px solid #eee; }
+    .pick .women-btn:hover{ transform:translateY(-4px) scale(1.02); box-shadow: 0 20px 35px rgba(255,79,154,.25);}
+    .hint{margin-top:14px; color:#9b9b9b; font-size:13px}
+
+    .hidden{display:none}
+
+    /* ---------- Sections ---------- */
+    section{
+      min-height:100vh; padding:64px 28px; opacity:0; transform:translateY(10px); transition: .6s ease;
+    }
+    section.active{opacity:1; transform:none}
+    .container{max-width:1200px; margin:0 auto}
+
+    /* Titles */
+    .section-head{
+      display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:28px;
+    }
+    .section-head h2{
+      font-size: clamp(22px, 3.2vw, 34px);
+      margin:0; letter-spacing:.02em;
+    }
+    .section-sub{
+      text-align:center; color:#9a9a9a; margin: 8px 0 36px;
+      font-size: clamp(13px, 2vw, 15px);
+    }
+
+    /* ---------- Grid ---------- */
+    .products{
+      display:grid; gap:20px;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    }
+
+    /* ---------- Product Card (base) ---------- */
+    .product{
+      border-radius: var(--radius);
+      overflow:hidden; backface-visibility:hidden; transform-style:preserve-3d;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+    .product .ph{
+      width:100%; height:220px; object-fit:cover; display:block; background:#333;
+    }
+    .meta{ padding:16px; display:grid; gap:10px }
+    .title{ font-weight:700; letter-spacing:.02em; margin:0 }
+    .prices{ display:flex; align-items:center; gap:10px }
+    .old-price{ text-decoration: line-through; color:#8a8a8a; font-size:.95rem }
+    .new-price{ font-size:1.1rem; font-weight:800 }
+
+    .order-btn{
+      display:inline-block; padding:10px 16px; border-radius:10px; font-weight:800;
+      text-decoration:none; transition: var(--transition); will-change: transform;
+    }
+    .product:hover{ transform: perspective(900px) rotateX(4deg) translateY(-6px); }
+    .product:active{ transform: perspective(900px) rotateX(0) translateY(0) scale(.98); }
+
+    /* ---------- MEN THEME (Black background) ---------- */
+    #men-section{ background:#000; color:#fff }
+    #men-section .section-head h2{ color: var(--gold) }
+    #men-section .product{ background: var(--card-bg-dark); box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset; }
+    #men-section .new-price{ color:#ff4242 }
+    #men-section .order-btn{ background:#fff; color:#000; }
+    #men-section .order-btn:hover{ transform: translateY(-3px); box-shadow: var(--shadow-3d); }
+    #men-section .order-btn:active{ transform: translateY(0) scale(.98); }
+
+    /* ---------- WOMEN THEME (White background) ---------- */
+    #women-section{ background:#ffffff; color:#000 }
+    #women-section .section-head h2{ color: var(--pink) }
+    #women-section .section-sub{ color:#555 }
+    #women-section .product{ background: #fff; border:1px solid #f2f2f2; box-shadow: var(--shadow-soft); }
+    #women-section .old-price{ color:#777 }
+    #women-section .new-price{ color:#e5397a }
+    #women-section .order-btn{ background: var(--pink); color:#fff; }
+    #women-section .order-btn:hover{ transform: translateY(-3px); box-shadow: 0 18px 35px rgba(255,79,154,.28); }
+    #women-section .order-btn:active{ transform: translateY(0) scale(.98); }
+
+    /* footer mini */
+    .mini-footer{
+      text-align:center; font-size:12px; opacity:.6; margin-top:36px
+    }
+
+    /* Small devices spacing */
+    @media (max-width:520px){
+      .meta{ padding:14px }
+      .ph{ height:200px }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ========== LANDING: CHOOSE COLLECTION ========== -->
+  <div id="selection-screen" class="selection-screen">
+    <div class="brand">PERFUME STORE</div>
+    <div class="tagline">Choose your collection to explore our finest fragrances.</div>
+    <div class="pick">
+      <button class="men-btn"   onclick="showSection('men')">Men's Perfume</button>
+      <button class="women-btn" onclick="showSection('women')">Women's Perfume</button>
+    </div>
+    <div class="hint">Tip: you can switch sections anytime by reloading the page.</div>
+  </div>
+
+  <!-- ========== MEN SECTION (BLACK) ========== -->
+  <section id="men-section" class="hidden">
+    <div class="container">
+      <div class="section-head">
+        <h2>Men's Collection</h2>
+      </div>
+      <p class="section-sub">Bold. Refined. Timeless. Discover the men's picks.</p>
+
+      <div class="products">
+        <!-- 10 products / images left empty intentionally -->
+        <div class="product">
+  <img class="ph" src="images/1702952688-bleu-edp-6580fecd9efd3.jpg" alt="BLUE DE CHANEL">
+  <div class="meta">
+    <h3 class="title"> BLUE DE CHANEL </h3>
+    <div class="prices"><span class="old-price">$120</span><span class="new-price">$80</span></div>
+    <a href="https://wa.me/201556251951?text=I%20want%20BLUE%20DE%20CHANEL" target="_blank" class="order-btn">Order Now</a>
+  </div>
+</div>
+
+<div class="product">
+  <img class="ph" src="images/2_804f7585-b9e7-4485-bb18-aec6dd1c44ed (2).jpg" alt="TITANIUM">
+  <div class="meta">
+    <h3 class="title"> TITANIUM </h3>
+    <div class="prices"><span class="old-price">$140</span><span class="new-price">$95</span></div>
+    <a href="https://wa.me/201556251951?text=I%20want%20TITANIUM" target="_blank" class="order-btn">Order Now</a>
+  </div>
+</div>
+
+<div class="product">
+  <img class="ph" src="images/61mXamAOZgL.jpg" alt="ZARA BLACK AMBER">
+  <div class="meta">
+    <h3 class="title"> ZARA BLACK AMBER </h3>
+    <div class="prices"><span class="old-price">$110</span><span class="new-price">$75</span></div>
+    <a href="https://wa.me/201556251951?text=I%20want%20ZARA%20BLACK%20AMBER" target="_blank" class="order-btn">Order Now</a>
+  </div>
+</div>
+
+<div class="product">
+  <img class="ph" src="images/71NybY32cCL.jpg" alt="BLACK OPIUM">
+  <div class="meta">
+    <h3 class="title"> BLACK OPIUM </h3>
+    <div class="prices"><span class="old-price">$100</span><span class="new-price">$70</span></div>
+    <a href="https://wa.me/201556251951?text=I%20want%20BLACK%20OPIUM" target="_blank" class="order-btn">Order Now</a>
+  </div>
+</div>
+
+<div class="product">
+  <img class="ph" src="images/help-me-pick-a-fresh-office-fragrance-v0-sbjrba2d6ppe1.jpg" alt="ACQUA DI">
+  <div class="meta">
+    <h3 class="title"> ACQUA DI </h3>
+    <div class="prices"><span class="old-price">$130</span><span class="new-price">$90</span></div>
+    <a href="https://wa.me/201556251951?text=I%20want%20ACQUA%20DI" target="_blank" class="order-btn">Order Now</a>
+  </div>
+</div>
+
+<div class="product">
+  <img class="ph" src="images/Jaguar-Classic-Black-EDT-M-100ml-1_1024x1024.jpg" alt="JAGUR CLASSIC BLACK">
+  <div class="meta">
+    <h3 class="title"> JAGUR CLASSIC BLACK </h3>
+    <div class="prices"><span class="old-price">$125</span><span class="new-price">$85</span></div>
+    <a href="https://wa.me/201556251951?text=I%20want%20JAGUR%20CLASSIC%20BLACK" target="_blank" class="order-btn">Order Now</a>
+  </div>
+</div>
+
+<div class="product">
+  <img class="ph" src="images/s-l1200 (1).jpg" alt="VILLAIN">
+  <div class="meta">
+    <h3 class="title"> V I L L A I N </h3>
+    <div class="prices"><span class="old-price">$135</span><span class="new-price">$95</span></div>
+    <a href="https://wa.me/201556251951?text=I%20want%20VILLAIN" target="_blank" class="order-btn">Order Now</a>
+  </div>
+</div>
+
+<div class="product">
+  <img class="ph" src="images/s-l1200.jpg" alt="BLACK POUR HOMME">
+  <div class="meta">
+    <h3 class="title"> BLACK POUR HOMME </h3>
+    <div class="prices"><span class="old-price">$115</span><span class="new-price">$78</span></div>
+    <a href="https://wa.me/201556251951?text=I%20want%20BLACK%20POUR%20HOMME" target="_blank" class="order-btn">Order Now</a>
+  </div>
+</div>
+
+<div class="product">
+  <img class="ph" src="images/tubereuse-astrale-box-450x450.png" alt="tubereuse-Astrale">
+  <div class="meta">
+    <h3 class="title"> tubereuse-Astrale </h3>
+    <div class="prices"><span class="old-price">$145</span><span class="new-price">$100</span></div>
+    <a href="https://wa.me/201556251951?text=I%20want%20tubereuse-Astrale" target="_blank" class="order-btn">Order Now</a>
+  </div>
+</div>
+
+<div class="product">
+  <img class="ph" src="images/zara-perfumes-and-deodorants-19308-239554821-h712s.jpg" alt="ZARA">
+  <div class="meta">
+    <h3 class="title"> ZARA </h3>
+    <div class="prices"><span class="old-price">$150</span><span class="new-price">$105</span></div>
+    <a href="https://wa.me/201556251951?text=I%20want%20ZARA" target="_blank" class="order-btn">Order Now</a>
+  </div>
+</div>
+
+      <div class="mini-footer">Scroll for more • Switch collection by reloading</div>
+    </div>
+  </section>
+
+  <!-- ========== WOMEN SECTION (WHITE) ========== -->
+  <section id="women-section" class="hidden">
+    <div class="container">
+      <div class="section-head">
+        <h2>Women's Collection</h2>
+      </div>
+      <p class="section-sub">Soft. Elegant. Captivating. Explore the women's picks.</p>
+
+      <div class="products">
+        <!-- 10 products / images left empty intentionally -->
+        <div class="product">
+          <img class="ph" src="" alt="Perfume A">
+          <div class="meta">
+            <h3 class="title">Perfume Name A</h3>
+            <div class="prices"><span class="old-price">$110</span><span class="new-price">$75</span></div>
+            <a href="https://wa.me/201556251951?text=I%20want%20Perfume%20A" target="_blank" class="order-btn">Order Now</a>
+          </div>
+        </div>
+
+        <div class="product">
+          <img class="ph" src="" alt="Perfume B">
+          <div class="meta">
+            <h3 class="title">Perfume Name B</h3>
+            <div class="prices"><span class="old-price">$120</span><span class="new-price">$80</span></div>
+            <a href="https://wa.me/201556251951?text=I%20want%20Perfume%20B" target="_blank" class="order-btn">Order Now</a>
+          </div>
+        </div>
+
+        <div class="product">
+          <img class="ph" src="" alt="Perfume C">
+          <div class="meta">
+            <h3 class="title">Perfume Name C</h3>
+            <div class="prices"><span class="old-price">$100</span><span class="new-price">$70</span></div>
+            <a href="https://wa.me/201556251951?text=I%20want%20Perfume%20C" target="_blank" class="order-btn">Order Now</a>
+          </div>
+        </div>
+
+        <div class="product">
+          <img class="ph" src="" alt="Perfume D">
+          <div class="meta">
+            <h3 class="title">Perfume Name D</h3>
+            <div class="prices"><span class="old-price">$140</span><span class="new-price">$95</span></div>
+            <a href="https://wa.me/201556251951?text=I%20want%20Perfume%20D" target="_blank" class="order-btn">Order Now</a>
+          </div>
+        </div>
+
+        <div class="product">
+          <img class="ph" src="" alt="Perfume E">
+          <div class="meta">
+            <h3 class="title">Perfume Name E</h3>
+            <div class="prices"><span class="old-price">$130</span><span class="new-price">$88</span></div>
+            <a href="https://wa.me/201556251951?text=I%20want%20Perfume%20E" target="_blank" class="order-btn">Order Now</a>
+          </div>
+        </div>
+
+        <div class="product">
+          <img class="ph" src="" alt="Perfume F">
+          <div class="meta">
+            <h3 class="title">Perfume Name F</h3>
+            <div class="prices"><span class="old-price">$125</span><span class="new-price">$82</span></div>
+            <a href="https://wa.me/201556251951?text=I%20want%20Perfume%20F" target="_blank" class="order-btn">Order Now</a>
+          </div>
+        </div>
+
+        <div class="product">
+          <img class="ph" src="" alt="Perfume G">
+          <div class="meta">
+            <h3 class="title">Perfume Name G</h3>
+            <div class="prices"><span class="old-price">$115</span><span class="new-price">$79</span></div>
+            <a href="https://wa.me/201556251951?text=I%20want%20Perfume%20G" target="_blank" class="order-btn">Order Now</a>
+          </div>
+        </div>
+
+        <div class="product">
+          <img class="ph" src="" alt="Perfume H">
+          <div class="meta">
+            <h3 class="title">Perfume Name H</h3>
+            <div class="prices"><span class="old-price">$135</span><span class="new-price">$92</span></div>
+            <a href="https://wa.me/201556251951?text=I%20want%20Perfume%20H" target="_blank" class="order-btn">Order Now</a>
+          </div>
+        </div>
+
+        <div class="product">
+          <img class="ph" src="" alt="Perfume I">
+          <div class="meta">
+            <h3 class="title">Perfume Name I</h3>
+            <div class="prices"><span class="old-price">$145</span><span class="new-price">$98</span></div>
+            <a href="https://wa.me/201556251951?text=I%20want%20Perfume%20I" target="_blank" class="order-btn">Order Now</a>
+          </div>
+        </div>
+
+        <div class="product">
+          <img class="ph" src="" alt="Perfume J">
+          <div class="meta">
+            <h3 class="title">Perfume Name J</h3>
+            <div class="prices"><span class="old-price">$150</span><span class="new-price">$100</span></div>
+            <a href="https://wa.me/201556251951?text=I%20want%20Perfume%20J" target="_blank" class="order-btn">Order Now</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="mini-footer">Tip: Try adding your own product images (keep src="")</div>
+    </div>
+  </section>
+
+  <!-- ========== SCRIPTS ========== -->
+  <script>
+    // Show chosen section and animate cards in
+    function showSection(type){
+      document.getElementById('selection-screen').style.display='none';
+
+      const men   = document.getElementById('men-section');
+      const women = document.getElementById('women-section');
+
+      const section = (type === 'men') ? men : women;
+      section.classList.remove('hidden');
+
+      // trigger fade-in
+      requestAnimationFrame(()=> section.classList.add('active'));
+
+      // stagger cards
+      const cards = section.querySelectorAll('.product');
+      cards.forEach((card, i)=>{
+        card.style.opacity = 0;
+        card.style.transform += ' translateY(14px)';
+        setTimeout(()=>{
+          card.style.transition = 'transform .6s cubic-bezier(.2,.7,.2,1), opacity .6s ease';
+          card.style.opacity = 1;
+          card.style.transform = card.style.transform.replace(' translateY(14px)','');
+        }, 180 + i*90);
+      });
+    }
+
+    // Reveal on scroll (gentle)
+    const revealOnScroll = () => {
+      const trigger = window.innerHeight * 0.9;
+      document.querySelectorAll('.product').forEach(el=>{
+        const top = el.getBoundingClientRect().top;
+        if(top < trigger){ el.style.opacity = 1; }
+      });
+    };
+    window.addEventListener('scroll', revealOnScroll);
+  </script>
+</body>
+</html>
